@@ -1,0 +1,10 @@
+TITLE={{stuff}}
+WEIGHT={{2}}
+
+FULL_TEXT={{
+<p>
+This page has been rendered with hagel. hagel is an experimental static page generator that supports multiple languages, templating, one-level menus, content categories ('content types') and direct rendering of system command outputs into content. 
+</p><p>
+Implemented in a single ~180 LOC Makefile. Created during a heavy hail storm in may 2015, hence the name (hagel means hail in german).
+</p>
+}}
