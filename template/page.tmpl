@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang=$global{ACTIVE_LANGUAGE}>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta charset="utf-8" />
+<title>$global{PAGE_TITLE}</title>
+<style>
+    a.active {font-weight: bold;}
+</style>
+</head>
+
+<body>
+
+<header role="banner">
+    <a class="title" href="$global{HOME}">$global{PAGE_TITLE}</a>
+    <nav class="secondary-nav">
+        <ul>
+            $languageswitcher{}
+        </ul>
+    </nav>
+</header>
+
+<div class="mainwrap">      
+    <nav class="main-nav" role="navigation">
+        <ul>
+            $menu{}
+        </ul>
+    </nav>
+
+    <main role="main">
+        <div class="main-inner">
+            <div id="main-inner-wrap">
+                $content{}
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        $global{FOOTERMSG}
+    </footer>
+</div>
+</body>
+</html>
