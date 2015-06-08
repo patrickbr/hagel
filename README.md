@@ -149,12 +149,12 @@ Known restrictions
 Paging
 ------
 
-There is not paging for content rows. This is the next big thing that has to be implemented.
+There is no paging for content rows. This is the next big thing that has to be implemented.
 
 Error messages
 --------------
 
-Error messages are for the most part cryptic errors from `sed`. Most of them are entirely useless for you.
+Error messages are for the most part cryptic errors from `sed`. Most of them are entirely useless to you.
 
 Alpha status
 ------------
