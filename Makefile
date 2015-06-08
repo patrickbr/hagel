@@ -6,8 +6,9 @@ I = /index.html
 T = template
 P = content
 R = render
+S = $(abspath static)/
 PR = %
-PLANG = de
+PLANG = en
 PCONT = main
 ALLWD_VAR_CHRS = A-Za-z0-9_-
 
@@ -25,6 +26,9 @@ ifdef PRIM_LANG
 endif
 ifdef PRIM_CONT 
 	PCONT = $(PRIM_CONT)
+endif
+ifdef STATIC
+	S = $(STATIC)
 endif
 
 CON_FILES = $(sort $(wildcard $(P)/*/*/*.content))
@@ -60,7 +64,8 @@ $(var-def)
 @sed -i -e 's|$$global{BASE_PATH}|$(B)|g' -e 's|$$global{ACTIVE_LANGUAGE}|$(LANG)|g' \
 	-e 's|$$global{ACTIVE_CATEGORY}|$(CATEGORY)|g' -e 's|$$category{WEIGHT}|0|g' \
 	-e 's|$$content{WEIGHT}|0|g' -e 's|$$content{NAME}|$(CONTENT)|g' \
-	-e 's|$$global{INDEX_PATH}|$(I)|g' $@
+	-e 's|$$global{INDEX_PATH}|$(I)|g' -e 's|$$global{STATIC_PATH}|$(S)|g' \
+	-e 's|$$global{HOME}|$(subst //,/,$(B)$(I))|g' $@
 
 @test -f $(P)/$(LANG)/global.info && cat $(P)/$(LANG)/global.info | tr '\n' ' ' | \
 	sed -e 's|\([$(ALLWD_VAR_CHRS)]*\)={{|\n\1={{|g' -e 's|\\|\\\\|g' \
@@ -115,7 +120,7 @@ $(R)/%.crow.r: $(P)/%.content $(T)/content_row.tmpl $$(wildcard $$(dir $$(P)/$$*
 .SECONDEXPANSION:
 $(R)/%/crows.r:$$(patsubst $$(P)/$$(PR).content,$$(R)/$$(PR).crow.r,\
   $$(wildcard $(P)/$$*/*.content)) | rndr_strct
-	@touch $@ && test -f '$<' && cat $^ | sort -Vk1,1 | sed 's/$$__cnt_w_{[a-zA-Z0-9]\+}//g' >$@ ||:
+	@touch $@ && test -f '$<' && cat $^ | sort -Vk1,1 | sed 's/$$__cnt_w_{[a-zA-Z0-9-]\+}//g' >$@ ||:
 
 .SECONDEXPANSION:
 $(R)/%/category.r: $(P)/%/category.info $(R)/%/crows.r $(R)/lswitch.r \
@@ -157,7 +162,7 @@ $(CON_HTML_FILES) $(CAT_HTML_FILES):
 .SECONDEXPANSION:
 $(R)/%/menu.r: $$(patsubst $$(P)/$$(PR)/category.info,$$(R)/$$(PR)/mrow.r,\
   $$(wildcard $(P)/$$*/**/category.info)) | rndr_strct
-	@cat $^ | sort -V -k1,1 | sed 's/$$__cweight_{[a-zA-Z0-9]\+}//g' > $@
+	@cat $^ | sort -V -k1,1 | sed 's/$$__cweight_{[a-zA-Z0-9-]\+}//g' > $@
 
 $(R)/lswitch.r: $(patsubst $(P)/%,$(R)/%/lrow.r,$(LAN_FOLDERS)) | rndr_strct
 	@cat $^ > $@
