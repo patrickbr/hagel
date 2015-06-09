@@ -1,35 +1,24 @@
 # hagel - single Makefile static page generator
 # Copyright 2015 Patrick Brosi <info@patrickbrosi.de>
 
-B = $(abspath html)/
-I = /index.html
-T = template
+BASE = $(abspath html)/
+INDEX = /index.html
+TEMPLATE = template
 P = content
 R = render
-S = $(abspath static)/
+STATIC = $(abspath static)/
 PR = %
-PLANG = en
-PCONT = main
+PRIM_LANG = en
+PRIM_CONT = main
 ALLWD_VAR_CHRS = A-Za-z0-9_-
 
-ifdef BASE 
-	B = $(BASE)
-endif
-ifdef INDEX 
-	I = $(INDEX)
-endif
-ifdef TEMPLATE 
-	T = $(TEMPLATE)
-endif
-ifdef PRIM_LANG 
-	PLANG = $(PRIM_LANG)
-endif
-ifdef PRIM_CONT 
-	PCONT = $(PRIM_CONT)
-endif
-ifdef STATIC
-	S = $(STATIC)
-endif
+# shorten variable names
+B = $(BASE)
+I = $(INDEX)
+T = $(TEMPLATE)
+PLANG = $(PRIM_LANG)
+PCONT = $(PRIM_CONT)
+S = $(STATIC)
 
 CON_FILES = $(sort $(wildcard $(P)/*/*/*.content))
 CON_HTML_FILES = $(subst $(P)/, html/, $(patsubst %.content, %.html, $(CON_FILES)))
