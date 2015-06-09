@@ -3,9 +3,9 @@ hagel
 
 An (experimental) static page generator that supports multiple languages, templating, one-level menus, content categories (_"content types"_) and direct rendering of system command outputs into content. 
 
-An example page rendered with hagel [can be found here](http://patrickbrosi.de/hagelexample).
-
 Implemented in a single ~180 LOC Makefile. Created during [a heavy hail storm in may 2015](https://www.youtube.com/watch?v=HDuHtCnxxj8), hence the name (hagel means hail in german).
+
+An example page rendered with hagel [can be found here](http://patrickbrosi.de/hagelexample).
 
 Who is this for?
 ================
@@ -20,7 +20,7 @@ You may find this useful if
 What does it do?
 ================
 
-hagel lets you create template files for the overall page, categories, content and the menu. The structure of the website is defined as a directory hierarchy. Languages, categories and content are described as *.info files in which variables can be defined. These variables can be accessed in the template files. Since variables are expanded two times and can include direct outputs of system calls, this allows for quite elaborate setups.
+hagel lets you create template files for the overall page, categories, content and the menu. The structure of the website is defined as a directory hierarchy. Languages, categories and content are described as `*.info` files in which variables can be defined. These variables can be accessed in the template files. Since variables are expanded two times and can include direct output of system calls, this allows for quite elaborate setups.
 
 Prerequisites
 =============
@@ -33,7 +33,7 @@ to install it.
 
 The following commands are used and should be either installed as binaries or provided as built-in functions of your shell:
 
-    find, test, GNU sed, tr, cp, cat, rm, mkdir, touch
+    find, test, GNU sed, tr, cp, cat, rm, mkdir, touch, printf
 
 If you are running a unix-like system, you shouldn't have to worry about them. Please note, however, that hagel makes use of some GNU extensions to `sed`. If you have a version of `sed` installed that only supports posix style parameters, you won't be able to use hagel.
 
@@ -55,7 +55,7 @@ For a more thorough explanation of the build process parameters, see below.
 Template files
 --------------
 
-Template files are in `./templates`. You can modify them and run make again to see changes. There are 6 types of template files which are presented here in hierarchical order. See the comments in the `./template` files for a list of variables that are accessible in them
+Template files are in `./templates`. You can modify them and run `make` again to see changes. There are 6 types of template files which are presented here in hierarchical order. See the comments in the `./template` files for a list of variables that are accessible in them
 
  * `page.tmpl`, a template file for the overall page
  * `menu_row.tmpl`, a template file for a single entry in the menu
@@ -64,9 +64,9 @@ Template files are in `./templates`. You can modify them and run make again to s
  * `content_row.tmpl`, a template file for a content row inside a category page (is used to render the 'teaser' of a content)
  * `content.tmpl`, a template file for full content
 
-Template files can be overwritten by categories by placing them inside a category folder in `./content`. See below for more information on that.
+Template files can be overwritten by placing them inside a category folder in `./content`. See below for more information on that.
 
-Be default, hagel uses the template found in `./template`. If you are for example using several templates in different directories, you can set TEMPLATE to a different path in your make call like this:
+Be default, hagel uses the template found in `./template`. If you are for example using several templates in different directories, you can set TEMPLATE to a different path in your `make` call like this:
 
     make TEMPLATE='my-shiny-new-template'
 
@@ -115,7 +115,7 @@ or
 
     make all
 
-which has to be executed in the base folder of this repository. It only re-renders those parts of the website that have changes since the last build.
+which has to be executed in the base folder of this repository. It only re-renders those parts of the website that have changed since the last build.
 
 If you want to rebuild the page completely, you can either run
 
