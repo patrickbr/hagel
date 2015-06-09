@@ -115,7 +115,7 @@ $(R)/%.crow.r: $(P)/%.content $(T)/content_row.tmpl $$(wildcard $$(dir $$(P)/$$*
 	@sed -i '1s/^/$$__cnt_w_{$$content{WEIGHT}} /' $@
 	$(var-sub)
 	@sed -i -e 's|$$content{URL}|$(B)$(patsubst $(P)/%.content,%.html,$<)|g' $@
-	@tr '\n' ' ' < $@ > $@.tmp && echo '\n' >> $@.tmp && mv -f $@.tmp $@
+	@tr '\n' ' ' < $@ > $@.tmp && printf '\n' >> $@.tmp && mv -f $@.tmp $@
 
 .SECONDEXPANSION:
 $(R)/%/crows.r:$$(patsubst $$(P)/$$(PR).content,$$(R)/$$(PR).crow.r,\
@@ -146,7 +146,7 @@ $(R)/%/mrow.r: $(P)/%/category.info $(T)/menu_row.tmpl | rndr_strct
 		-e 's|$$category{ACTIVE}|$$__category_active_{$(lastword\
 		$(subst /, ,$(subst $(notdir $@),,$(patsubst $(P)/%,%,$@))))}|g' $@
     
-	@tr '\n' ' ' < $@ > $@.tmp && echo '\n' >> $@.tmp && mv -f $@.tmp $@
+	@tr '\n' ' ' < $@ > $@.tmp && printf '\n' >> $@.tmp && mv -f $@.tmp $@
 
 $(R)/%/lrow.r: $(T)/lan_switch_row.tmpl | rndr_strct
 	$(eval LACT = $(firstword $(subst /, ,$(subst $(notdir $@),,$(patsubst $(R)/%,%,$@)))))
