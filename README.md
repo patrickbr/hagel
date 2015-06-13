@@ -3,7 +3,7 @@ hagel
 
 An (experimental) static page generator that supports multiple languages, templating, one-level menus, content categories (_"content types"_) and direct rendering of system command outputs into content. 
 
-Implemented in a single ~180 LOC Makefile. Created during [a heavy hail storm in may 2015](https://www.youtube.com/watch?v=HDuHtCnxxj8), hence the name (hagel means hail in german).
+Implemented in a single ~200 LOC Makefile. Created during [a heavy hail storm in may 2015](https://www.youtube.com/watch?v=HDuHtCnxxj8), hence the name (hagel means hail in german).
 
 An example page rendered with hagel [can be found here](http://patrickbrosi.de/hagelexample).
 
@@ -58,7 +58,8 @@ Template files
 Template files are in `./templates`. You can modify them and run `make` again to see changes. There are 6 types of template files which are presented here in hierarchical order. See the comments in the `./template` files for a list of variables that are accessible in them
 
  * `page.tmpl`, a template file for the overall page
- * `menu_row.tmpl`, a template file for a single entry in the menu
+ * `category_menu_row.tmpl`, a template file for a single category entry in the menu. You can insert the special variable `$submenu{}` anywhere in this file. It will be replaced with 2ndary menu (a list of content in this category, visible if a user is inside a content in this category)
+ * `content_menu_row.tmpl`, the template file for a single _content_ entry in the 2ndary menu
  * `lan_switch_row.tmpl`, a template file for a single entry in the language switcher
  * `category.tmpl`, a template file for category pages (pages which offer a list of content teasers)
  * `content_row.tmpl`, a template file for a content row inside a category page (is used to render the 'teaser' of a content)
@@ -164,4 +165,4 @@ Hagel is a mere hobby project and is still in experimental alpha status. Please 
 License
 =======
 
-GPL v2, see LICENSE in this directory.
+GPL v2
