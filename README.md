@@ -7,6 +7,8 @@ Implemented in a single ~200 LOC Makefile. Created during [a heavy hail storm in
 
 An example page rendered with hagel [can be found here](http://patrickbrosi.de/hagelexample).
 
+My [own homepage](http://patrickbrosi.de) is also rendered with hagel.
+
 Who is this for?
 ================
 
