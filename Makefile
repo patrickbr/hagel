@@ -4,6 +4,7 @@
 BASE = $(abspath html)/
 INDEX = /index.html
 TEMPLATE = template
+CSUFF = .html
 P = content
 R = render
 STATIC = $(abspath static)/
@@ -33,6 +34,8 @@ define var-def
 $(eval CATEGORY = $(lastword $(subst /, ,$(subst $(notdir $@),,$(patsubst $(R)/%,%,$@)))))
 $(eval LANG = $(firstword $(subst /, ,$(subst $(notdir $@),,$(patsubst $(R)/%,%,$@)))))
 $(eval CONTENT = $(subst category,,$(basename $(notdir $<))))
+$(eval LNEUT = $(patsubst $(LANG)/%,%,$(patsubst content/%,%,\
+  $(patsubst %.content,%$(CSUFF),$(subst /category.info,$(I),$<)))))
 endef
 
 define var-sub
@@ -45,6 +48,7 @@ endef
 
 define var-sub-sub
 $(var-def)
+
 @cat $< | tr '\n' ' ' | sed -e 's|\([$(ALLWD_VAR_CHRS)]*\)={{|\n\1={{|g' -e 's|\\|\\\\|g' \
 	-e 's|/|\\/|g' -e 's|\&|\\&|g' | sed 's|\([$(ALLWD_VAR_CHRS)]*\)={{\(.*\)}}|\
 	s/$$$(strip $(subst .,,$(suffix $(patsubst %.info,%.category,$<)))){\1}/\2/|'\
@@ -54,7 +58,8 @@ $(var-def)
 	-e 's|$$global{ACTIVE_CATEGORY}|$(CATEGORY)|g' -e 's|$$category{WEIGHT}|0|g' \
 	-e 's|$$content{WEIGHT}|0|g' -e 's|$$content{NAME}|$(CONTENT)|g' \
 	-e 's|$$global{INDEX_PATH}|$(I)|g' -e 's|$$global{STATIC_PATH}|$(S)|g' \
-	-e 's|$$global{HOME}|$(subst //,/,$(B)$(I))|g' $@
+	-e 's|$$global{LNEUT}|$(LNEUT)|g' \
+	-e 's|$$global{HOME}|$(subst //,/,$(B)$(subst /$(PLANG),,/$(LANG))$(I))|g' $@
 
 @test -f $(P)/$(LANG)/global.info && cat $(P)/$(LANG)/global.info | tr '\n' ' ' | \
 	sed -e 's|\([$(ALLWD_VAR_CHRS)]*\)={{|\n\1={{|g' -e 's|\\|\\\\|g' \
@@ -69,7 +74,11 @@ $(var-def)
 	$(strip $(subst $(lastword $(subst /, ,$(dir $@)))/, ,$(dir $@)))menu.r | tr -d '\n')/g" $@
 @sed -i -e 's|$$__category_active_{$(CATEGORY)}|active|g' \
 	-e 's|$$__category_active_{[a-zA-Z0-9]\+}||g' $@
-
+@test -n '$(CONTENT)' && sed -i -e "s/\$$__category_submenu_{$(CATEGORY)}/$$(sed -e 's/[\&/]/\\&/g'\
+	-e 's/$$/\\n/' $(strip $(dir $@))cmrows.r | tr -d '\n')/g" $@ ||:
+@sed -i -e 's|$$__category_submenu_{[a-zA-Z0-9]\+}||g' $@
+@sed -i -e 's|$$__content_active_{$(CONTENT)}|active|g' \
+	-e 's|$$__content_active_{[a-zA-Z0-9]\+}||g' $@
 @sed -i -e "s/\$$languageswitcher{}/$$(sed -e 's/[\&/]/\\&/g' -e 's/$$/\\n/'\
 	$(R)/lswitch.r | tr -d '\n')/g" $@
 @sed -i -e 's|$$__lactive_{$(LANG)}|active|g' -e 's|$$__lactive_{[a-zA-Z0-9]\+}||g' $@
@@ -88,7 +97,8 @@ all: $(CAT_HTML_FILES) $(CON_HTML_FILES) $(LANG_INDEX_FILES) html/index.html
 .SECONDEXPANSION:
 $(R)/%.content.r: $(P)/%.content $(R)/lswitch.r $(T)/page.tmpl \
   $$(strip $$(subst $$(lastword $$(subst /, ,$$(dir $$@)))/, ,$$(dir $$@)))menu.r \
-  $(T)/content.tmpl $$(wildcard $$(dir $$(P)/$$*)content.tmpl) | rndr_strct
+  $(T)/content.tmpl $$(wildcard $$(dir $$(P)/$$*)content.tmpl) $$(dir $$(R)/$$*)cmrows.r | rndr_strct
+	@echo "Building $@"
 	@cp $(T)/page.tmpl $@
 	@test -f $(dir $(P)/$*)content.tmpl && sed -i -e '/$$content{}/{r $(dir $(P)/$*)content.tmpl'\
 		-e 'd}' $@  || sed -i -e '/$$content{}/{r $(T)/content.tmpl' -e 'd}' $@
@@ -99,26 +109,45 @@ $(R)/%.content.r: $(P)/%.content $(R)/lswitch.r $(T)/page.tmpl \
 .SECONDEXPANSION:
 $(R)/%.crow.r: $(P)/%.content $(T)/content_row.tmpl $$(wildcard $$(dir $$(P)/$$*)content_row.tmpl) \
   | rndr_strct
+	@echo "Building $@"
 	@test -f $(dir $(P)/$*)/content_row.tmpl && cp $(dir $(P)/$*)/content_row.tmpl $@\
 		|| cp $(T)/content_row.tmpl $@
 	@sed -i '1s/^/$$__cnt_w_{$$content{WEIGHT}} /' $@
 	$(var-sub)
-	@sed -i -e 's|$$content{URL}|$(B)$(patsubst $(P)/%.content,%.html,$<)|g' $@
+	@sed -i -e 's|$$content{URL}|$(B)$(patsubst $(P)/%.content,%$(CSUFF),$<)|g' $@
 	@tr '\n' ' ' < $@ > $@.tmp && printf '\n' >> $@.tmp && mv -f $@.tmp $@
 
 .SECONDEXPANSION:
+$(R)/%.cmrow.r: $(P)/%.content $(T)/content_menu_row.tmpl | rndr_strct
+	@echo "Building $@" 
+	@cp $(T)/content_menu_row.tmpl $@
+	@sed -i -e '1s/^/$$__cnt_w_{$$content{WEIGHT}} /'\
+		-e 's|$$content{ACTIVE}|$$__content_active_{$(basename $(notdir $<))}|g' $@
+	$(var-sub)
+	@sed -i -e 's|$$content{URL}|$(B)$(patsubst $(P)/%.content,%$(CSUFF),$<)|g' $@
+	@tr '\n' ' ' < $@ > $@.tmp && printf '\n' >> $@.tmp && mv -f $@.tmp $@
+
+.SECONDEXPANSION:
+$(R)/%/cmrows.r:$$(patsubst $$(P)/$$(PR).content,$$(R)/$$(PR).cmrow.r,\
+  $$(wildcard $(P)/$$*/*.content)) | rndr_strct
+	@echo "Building $@"
+	@touch $@ && test -f '$<' && cat $^ | sort -Vk1,1 | sed 's/$$__cnt_w_{[a-zA-Z0-9-]\+}//g' >$@ ||:
+
 $(R)/%/crows.r:$$(patsubst $$(P)/$$(PR).content,$$(R)/$$(PR).crow.r,\
   $$(wildcard $(P)/$$*/*.content)) | rndr_strct
+	@echo "Building $@"
 	@touch $@ && test -f '$<' && cat $^ | sort -Vk1,1 | sed 's/$$__cnt_w_{[a-zA-Z0-9-]\+}//g' >$@ ||:
 
 .SECONDEXPANSION:
-$(R)/%/category.r: $(P)/%/category.info $(R)/%/crows.r $(R)/lswitch.r \
+$(R)/%/category.r: $(P)/%/category.info $(R)/%/cmrows.r $(R)/%/crows.r $(R)/lswitch.r \
   $$(strip $$(subst $$(lastword $$(subst /, ,$$(dir $$@)))/, ,$$(dir $$@)))menu.r \
   $(T)/page.tmpl $(T)/category.tmpl $$(wildcard $$(dir $$(P)/$$*)category.tmpl) | rndr_strct
+	@echo "Building $@"
 	@test -f $(P)/$*/page.tmpl && cp $(P)/$*/page.tmpl $@ || cp $(T)/page.tmpl $@
 	@test -f $(P)/$*/category.tmpl && sed -i \
 		-e '/$$content{}/{r $(P)/$*/category.tmpl' -e 'd}' $@ \
 		|| sed -i -e '/$$content{}/{r $(T)/category.tmpl' -e 'd}' $@
+
 
 	@sed -i -e "s/\$$rows{}/$$(sed -e 's/[\&/]/\\&/g' -e 's/$$/\\n/' \
 		$(R)/$*/crows.r | tr -d '\n')/g" $@
@@ -126,20 +155,25 @@ $(R)/%/category.r: $(P)/%/category.info $(R)/%/crows.r $(R)/lswitch.r \
 	$(menu-sub)
 	$(var-sub)
 
-$(R)/%/mrow.r: $(P)/%/category.info $(T)/menu_row.tmpl | rndr_strct
-	@cp $(T)/menu_row.tmpl $@ && sed -i '1s/^/$$__cweight_{$$category{WEIGHT}} /' $@
+$(R)/%/mrow.r: $(P)/%/category.info $(T)/category_menu_row.tmpl | rndr_strct
+	@echo "Building $@"
+	@cp $(T)/category_menu_row.tmpl $@ && sed -i '1s/^/$$__cweight_{$$category{WEIGHT}} /' $@
 	$(var-sub)
 
 	@sed -i -e 's|$$category{URL}|$(subst //,/,$(B)$(patsubst %/,%,$(patsubst\
 		/%,%,$(subst /$(PCONT),,$(subst /$(PLANG)/$(PCONT)/,/,/$*/))))$(I))|g' \
 		-e 's|$$category{ACTIVE}|$$__category_active_{$(lastword\
+		$(subst /, ,$(subst $(notdir $@),,$(patsubst $(P)/%,%,$@))))}|g'\
+		-e 's|$$submenu{}|$$__category_submenu_{$(lastword\
 		$(subst /, ,$(subst $(notdir $@),,$(patsubst $(P)/%,%,$@))))}|g' $@
     
 	@tr '\n' ' ' < $@ > $@.tmp && printf '\n' >> $@.tmp && mv -f $@.tmp $@
 
 $(R)/%/lrow.r: $(T)/lan_switch_row.tmpl | rndr_strct
+	@echo "Building $@"
 	$(eval LACT = $(firstword $(subst /, ,$(subst $(notdir $@),,$(patsubst $(R)/%,%,$@)))))
-	@cp $< $@ && sed -i -e 's|$$language{URL}|$(B)$*$(I)|g' \
+	@cp $< $@\
+		&& sed -i -e 's|$$language{URL}|$$global{BASE_PATH}$(LACT)/$$global{LNEUT}|g' \
 		-e 's|$$language{ACTIVE}|$$__lactive_{$(LACT)}|g' -e 's|$$language{NAME}|$(LACT)|g' $@
 
 $(CAT_HTML_FILES): html/%/index.html : $(R)/%/category.r
@@ -151,9 +185,11 @@ $(CON_HTML_FILES) $(CAT_HTML_FILES):
 .SECONDEXPANSION:
 $(R)/%/menu.r: $$(patsubst $$(P)/$$(PR)/category.info,$$(R)/$$(PR)/mrow.r,\
   $$(wildcard $(P)/$$*/**/category.info)) | rndr_strct
+	@echo "Building $@"
 	@cat $^ | sort -V -k1,1 | sed 's/$$__cweight_{[a-zA-Z0-9-]\+}//g' > $@
 
 $(R)/lswitch.r: $(patsubst $(P)/%,$(R)/%/lrow.r,$(LAN_FOLDERS)) | rndr_strct
+	@echo "Building $@"
 	@cat $^ > $@
 
 html/index.html: html/$(PLANG)/$(PCONT)/index.html
@@ -168,5 +204,5 @@ rndr_strct:
 
 .PHONY:
 clean:
-	@rm -rf render ||:
-	@rm -rf html ||:
+	@rm -rf render
+	@rm -rf html
