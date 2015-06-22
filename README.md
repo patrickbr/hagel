@@ -42,7 +42,7 @@ If you are running a unix-like system, you shouldn't have to worry about them. P
 Usage
 =====
 
-An example page using a bootstrap base theme [can be found here](http://patrickbrosi.de/hagelexample).
+A repo for an example page using a bootstrap base theme [can be found here](https://github.com/patrickbr/hagel-example).
 
 A very simple example page is included in this repository (in `./content`). You can build it by typing 
 
