@@ -59,7 +59,7 @@ $(var-def)
 	-e 's|$$content{WEIGHT}|0|g' -e 's|$$content{NAME}|$(CONTENT)|g' \
 	-e 's|$$global{INDEX_PATH}|$(I)|g' -e 's|$$global{STATIC_PATH}|$(S)|g' \
 	-e 's|$$global{LNEUT}|$(LNEUT)|g' \
-	-e 's|$$global{HOME}|$(subst //,/,$(B)$(subst /$(PLANG),,/$(LANG))$(I))|g' $@
+	-e 's|$$global{HOME}|$(subst //,/,$(B)/$(LANG)$(I))|g' $@
 
 @test -f $(P)/$(LANG)/global.info && cat $(P)/$(LANG)/global.info | tr '\n' ' ' | \
 	sed -e 's|\([$(ALLWD_VAR_CHRS)]*\)={{|\n\1={{|g' -e 's|\\|\\\\|g' \
