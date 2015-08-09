@@ -160,7 +160,7 @@ $(R)/%/mrow.r: $(P)/%/category.info $(T)/category_menu_row.tmpl | rndr_strc
 	$(var-sub)
 
 	@sed -i -e 's|$$category{URL}|$(subst //,/,$(B)$(patsubst %/,%,$(patsubst\
-		/%,%,$(subst /$(PCONT),,$(subst /$(PLANG)/$(PCONT)/,/,/$*/))))$(I))|g' \
+		/%,%,$(subst /$(PCONT),,/$*/)))$(I))|g' \
 		-e 's|$$category{ACTIVE}|$$__category_active_{$(lastword\
 		$(subst /, ,$(subst $(notdir $@),,$(patsubst $(P)/%,%,$@))))}|g'\
 		-e 's|$$submenu{}|$$__category_submenu_{$(lastword\
