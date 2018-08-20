@@ -9,8 +9,8 @@ P = content
 R = render
 STATIC = $(abspath static)/
 PR = %
-PRIM_LANG = en
-PRIM_CONT = main
+PRIM_LANG = $(shell (test -d content/en && echo en) || find content -maxdepth 1 -mindepth 1 -type d -printf '%f\n' | sort | head -n1)
+PRIM_CONT = $(shell (test -d content/$(PRIM_LANG)/main && echo main) || find content/$(PRIM_LANG) -maxdepth 1 -mindepth 1 -type d -printf '%f\n' | sort | head -n1)
 ALLWD_VAR_CHRS = A-Za-z0-9_-
 
 # shorten variable names
@@ -23,9 +23,7 @@ S = $(STATIC)
 
 CON_FILES = $(sort $(wildcard $(P)/*/*/*.content))
 CON_HTML_FILES = $(subst $(P)/, html/, $(patsubst %.content, %.html, $(CON_FILES)))
-
 LAN_FOLDERS = $(shell find content -maxdepth 1 -mindepth 1 -type d -print)
-
 CAT_FILES = $(wildcard $(P)/*/*/category.info)
 CAT_HTML_FILES = $(subst $(P)/, html/, $(patsubst %/category.info, %/index.html, $(CAT_FILES)))
 LANG_INDEX_FILES = $(patsubst %,%/index.html,$(subst $(P)/, html/, $(LAN_FOLDERS)))
@@ -70,18 +68,19 @@ endef
 
 define menu-sub
 $(var-def)
-@sed -i -e "s/\$$menu{}/$$(sed -e 's/[\&/]/\\&/g' -e 's/$$/\\n/'\
-	$(strip $(subst $(lastword $(subst /, ,$(dir $@)))/, ,$(dir $@)))menu.r | tr -d '\n')/g" $@
-@sed -i -e 's|$$__category_active_{$(CATEGORY)}|active|g' \
-	-e 's|$$__category_active_{[a-zA-Z0-9]\+}||g' $@
-@test -n '$(CONTENT)' && sed -i -e "s/\$$__category_submenu_{$(CATEGORY)}/$$(sed -e 's/[\&/]/\\&/g'\
-	-e 's/$$/\\n/' $(strip $(dir $@))cmrows.r | tr -d '\n')/g" $@ ||:
+@(echo -n s/\$$menu{}/ && (sed -e 's/[\&/]/\\&/g' -e 's/$$/\\n/' $(strip $(subst $(lastword $(subst /, ,$(dir $@)))/, ,$(dir $@)))menu.r | tr -d '\n') && echo -n /g) > $(strip $(dir $@)).$(strip $(notdir $@)).cmrows.temp.r
+
+@sed -i -f $(strip $(dir $@)).$(strip $(notdir $@)).cmrows.temp.r $@
+@sed -i -e 's|$$__category_active_{$(CATEGORY)}|active|g' -e 's|$$__category_active_{[a-zA-Z0-9]\+}||g' $@
+@(echo -n s/\$$__category_submenu_{$(CATEGORY)}/ && (sed -e 's/[\&/]/\\&/g' -e 's/$$/\\n/' $(strip $(dir $@))cmrows.r | tr -d '\n') && echo -n /g) > $(strip $(dir $@)).$(strip $(notdir $@)).cmrows.temp.r
+@test -n '$(CONTENT)' && sed -i -f $(strip $(dir $@)).$(strip $(notdir $@)).cmrows.temp.r $@ ||:
 @sed -i -e 's|$$__category_submenu_{[a-zA-Z0-9]\+}||g' $@
-@sed -i -e 's|$$__content_active_{$(CONTENT)}|active|g' \
-	-e 's|$$__content_active_{[a-zA-Z0-9]\+}||g' $@
-@sed -i -e "s/\$$languageswitcher{}/$$(sed -e 's/[\&/]/\\&/g' -e 's/$$/\\n/'\
-	$(R)/lswitch.r | tr -d '\n')/g" $@
+@sed -i -e 's|$$__content_active_{$(CONTENT)}|active|g' -e 's|$$__content_active_{[a-zA-Z0-9]\+}||g' $@
+@(echo -n s/\$$languageswitcher{}/ && (sed -e 's/[\&/]/\\&/g' -e 's/$$/\\n/'\
+	$(R)/lswitch.r | tr -d '\n') && echo -n /g) > $(strip $(dir $@)).$(strip $(notdir $@)).cmrows.temp.r
+@sed -i -f $(strip $(dir $@)).$(strip $(notdir $@)).cmrows.temp.r $@
 @sed -i -e 's|$$__lactive_{$(LANG)}|active|g' -e 's|$$__lactive_{[a-zA-Z0-9]\+}||g' $@
+@rm $(strip $(dir $@)).$(strip $(notdir $@)).cmrows.temp.r
 endef
 
 define curcat
@@ -102,7 +101,6 @@ $(R)/%.content.r: $(P)/%.content $(R)/lswitch.r $(T)/page.tmpl \
 	@cp $(T)/page.tmpl $@
 	@test -f $(dir $(P)/$*)content.tmpl && sed -i -e '/$$content{}/{r $(dir $(P)/$*)content.tmpl'\
 		-e 'd}' $@  || sed -i -e '/$$content{}/{r $(T)/content.tmpl' -e 'd}' $@
-
 	$(menu-sub)
 	$(var-sub)
 
@@ -131,12 +129,12 @@ $(R)/%.cmrow.r: $(P)/%.content $(T)/content_menu_row.tmpl | rndr_strc
 $(R)/%/cmrows.r:$$(patsubst $$(P)/$$(PR).content,$$(R)/$$(PR).cmrow.r,\
   $$(wildcard $(P)/$$*/*.content)) | rndr_strc
 	@echo "Building $@"
-	@touch $@ && test -f '$<' && cat $^ | sort -Vk1,1 | sed 's/$$__cnt_w{[a-zA-Z0-9-]\+}//g' >$@ ||:
+	@touch $@ && test -f '$<' && cat $^ | sort -Vk1,1 | sed 's/$$__cnt_w{[_a-zA-Z0-9-]\+}//g' >$@ ||:
 
 $(R)/%/crows.r:$$(patsubst $$(P)/$$(PR).content,$$(R)/$$(PR).crow.r,\
   $$(wildcard $(P)/$$*/*.content)) | rndr_strc
 	@echo "Building $@"
-	@touch $@ && test -f '$<' && cat $^ | sort -Vk1,1 | sed 's/$$__cnt_w{[a-zA-Z0-9-]\+}//g' >$@ ||:
+	@touch $@ && test -f '$<' && cat $^ | sort -Vk1,1 | sed 's/$$__cnt_w{[_a-zA-Z0-9-]\+}//g' >$@ ||:
 
 .SECONDEXPANSION:
 $(R)/%/category.r: $(P)/%/category.info $(R)/%/cmrows.r $(R)/%/crows.r $(R)/lswitch.r \
@@ -147,10 +145,8 @@ $(R)/%/category.r: $(P)/%/category.info $(R)/%/cmrows.r $(R)/%/crows.r $(R)/lswi
 	@test -f $(P)/$*/category.tmpl && sed -i \
 		-e '/$$content{}/{r $(P)/$*/category.tmpl' -e 'd}' $@ \
 		|| sed -i -e '/$$content{}/{r $(T)/category.tmpl' -e 'd}' $@
-
-	@sed -i -e "s/\$$rows{}/$$(sed -e 's/[\&/]/\\&/g' -e 's/$$/\\n/' \
-		$(R)/$*/crows.r | tr -d '\n')/g" $@
-
+	@(echo -n s/\$$rows{}/ && (sed -e 's/[\&/]/\\&/g' -e 's/$$/\\n/' $(R)/$*/crows.r | tr -d '\n') && echo -n /g) > $(R)/$*/.catrep.tmp
+	@sed -i -f $(R)/$*/.catrep.tmp $@ && rm $(R)/$*/.catrep.tmp
 	$(menu-sub)
 	$(var-sub)
 
@@ -158,14 +154,12 @@ $(R)/%/mrow.r: $(P)/%/category.info $(T)/category_menu_row.tmpl | rndr_strc
 	@echo "Building $@"
 	@cp $(T)/category_menu_row.tmpl $@ && sed -i '1s/^/$$__cweight{$$category{WEIGHT}} /' $@
 	$(var-sub)
-
 	@sed -i -e 's|$$category{URL}|$(subst //,/,$(B)$(patsubst %/,%,$(patsubst\
 		/%,%,$(subst /$(PCONT),,/$*/)))$(I))|g' \
 		-e 's|$$category{ACTIVE}|$$__category_active_{$(lastword\
 		$(subst /, ,$(subst $(notdir $@),,$(patsubst $(P)/%,%,$@))))}|g'\
 		-e 's|$$submenu{}|$$__category_submenu_{$(lastword\
 		$(subst /, ,$(subst $(notdir $@),,$(patsubst $(P)/%,%,$@))))}|g' $@
-
 	@tr '\n' ' ' < $@ > $@.tmp && printf '\n' >> $@.tmp && mv -f $@.tmp $@
 
 $(R)/%/lrow.r: $(T)/lan_switch_row.tmpl | rndr_strc
