@@ -38,38 +38,36 @@ endef
 
 define var-sub
 $(var-sub-sub)
-@# system call expansion - only one call per line supported - TODO: { and } escaping
+@sed -i 's/$$system{{\([^}]*\|}[^}]\)*}*}}/&$$__hagel_syscall_brk_{}\n/g' $@
 @sed -i -e '/\(.*\)$$system{{\(.*\)}}\(.*\)/ { h; s//\1\n\3/; x; s//\2 /e; G;\
 	s/\(.*\)\n\(.*\)\n\(.*\)/\2\1\3/; b }' $@
+@sed -i -e ':a' -e 'N' -e '$$!ba' -e 's/$$__hagel_syscall_brk_{}\n//g' $@
 $(var-sub-sub)
 endef
 
 define var-sub-sub
 $(var-def)
-
-@cat $< | tr '\n' ' ' | sed -e 's|\([$(ALLWD_VAR_CHRS)]*\)={{|\n\1={{|g' -e 's|\\|\\\\|g' \
-	-e 's|/|\\/|g' -e 's|\&|\\&|g' | sed 's|\([$(ALLWD_VAR_CHRS)]*\)={{\(.*\)}}|\
-	s/$$$(strip $(subst .,,$(suffix $(patsubst %.info,%.category,$<)))){\1}/\2/|'\
-	| xargs -0 -I % sed % -i'' $@;
-
+@sed -e ':a' -e 'N' -e '$$!ba' -e 's/\n/\\n/g' $< > $(dir $@).$(notdir $@).$(notdir $<).newlesc.tmp
+@sed -i -E -e 's|(^\|\}\})[\\n\s]*([$(ALLWD_VAR_CHRS)]*=\{\{\|$$)|\1\2|g' $(dir $@).$(notdir $@).$(notdir $<).newlesc.tmp
+@cat $(dir $@).$(notdir $@).$(notdir $<).newlesc.tmp | tr -d '\n' | sed -e 's|\([$(ALLWD_VAR_CHRS)]*\)={{|\n\1={{|g' -e 's|\\\([^n]\)|\\\\\1|g' -e 's|/|\\/|g' -e 's|\&|\\&|g' | sed 's|\([$(ALLWD_VAR_CHRS)]*\)={{\(.*\)}}| s/$$$(strip $(subst .,,$(suffix $(patsubst %.info,%.category,$<)))){\1}/\2/|' > $@.var.sub.tmp
+@sed -i -f $@.var.sub.tmp $@
 @sed -i -e 's|$$global{BASE_PATH}|$(B)|g' -e 's|$$global{ACTIVE_LANGUAGE}|$(LANG)|g' \
 	-e 's|$$global{ACTIVE_CATEGORY}|$(CATEGORY)|g' -e 's|$$category{WEIGHT}|0|g' \
 	-e 's|$$content{WEIGHT}|0|g' -e 's|$$content{NAME}|$(CONTENT)|g' \
 	-e 's|$$global{INDEX_PATH}|$(I)|g' -e 's|$$global{STATIC_PATH}|$(S)|g' \
 	-e 's|$$global{LNEUT}|$(LNEUT)|g' \
 	-e 's|$$global{HOME}|$(subst //,/,$(B)/$(LANG)$(I))|g' $@
-
 @test -f $(P)/$(LANG)/global.info && cat $(P)/$(LANG)/global.info | tr '\n' ' ' | \
 	sed -e 's|\([$(ALLWD_VAR_CHRS)]*\)={{|\n\1={{|g' -e 's|\\|\\\\|g' \
 	-e 's|/|\\/|g' -e 's|\&|\\&|g' \
 	| sed -e 's|\([$(ALLWD_VAR_CHRS)]*\)={{\(.*\)}}|s/$$global{\1}/\2/|'  \
 	| xargs -0 -I % sed % -i'' $@ || :
+@rm $@.var.sub.tmp && rm $(dir $@).$(notdir $@).$(notdir $<).newlesc.tmp
 endef
 
 define menu-sub
 $(var-def)
 @(echo -n s/\$$menu{}/ && (sed -e 's/[\&/]/\\&/g' -e 's/$$/\\n/' $(strip $(subst $(lastword $(subst /, ,$(dir $@)))/, ,$(dir $@)))menu.r | tr -d '\n') && echo -n /g) > $(strip $(dir $@)).$(strip $(notdir $@)).cmrows.temp.r
-
 @sed -i -f $(strip $(dir $@)).$(strip $(notdir $@)).cmrows.temp.r $@
 @sed -i -e 's|$$__category_active_{$(CATEGORY)}|active|g' -e 's|$$__category_active_{[a-zA-Z0-9]\+}||g' $@
 @(echo -n s/\$$__category_submenu_{$(CATEGORY)}/ && (sed -e 's/[\&/]/\\&/g' -e 's/$$/\\n/' $(strip $(dir $@))cmrows.r | tr -d '\n') && echo -n /g) > $(strip $(dir $@)).$(strip $(notdir $@)).cmrows.temp.r
