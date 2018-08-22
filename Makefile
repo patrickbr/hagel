@@ -20,7 +20,6 @@ T = $(TEMPLATE)
 PLANG = $(PRIM_LANG)
 PCONT = $(PRIM_CONT)
 S = $(STATIC)
-
 CON_FILES = $(sort $(wildcard $(P)/*/*/*.content))
 CON_HTML_FILES = $(subst $(P)/, html/, $(patsubst %.content, %.html, $(CON_FILES)))
 LAN_FOLDERS = $(shell find content -maxdepth 1 -mindepth 1 -type d -print)
@@ -50,6 +49,7 @@ $(var-def)
 @sed -e ':a' -e 'N' -e '$$!ba' -e 's/\n/\\n/g' $< > $(dir $@).$(notdir $@).$(notdir $<).newlesc.tmp
 @sed -i -E -e 's|(^\|\}\})[\\n\s]*([$(ALLWD_VAR_CHRS)]*=\{\{\|$$)|\1\2|g' $(dir $@).$(notdir $@).$(notdir $<).newlesc.tmp
 @cat $(dir $@).$(notdir $@).$(notdir $<).newlesc.tmp | tr -d '\n' | sed -e 's|\([$(ALLWD_VAR_CHRS)]*\)={{|\n\1={{|g' -e 's|\\\([^n]\)|\\\\\1|g' -e 's|/|\\/|g' -e 's|\&|\\&|g' | sed 's|\([$(ALLWD_VAR_CHRS)]*\)={{\(.*\)}}| s/$$$(strip $(subst .,,$(suffix $(patsubst %.info,%.category,$<)))){\1}/\2/|' > $@.var.sub.tmp
+@cat $< | tr -d '\n' | sed -e 's|\([$(ALLWD_VAR_CHRS)]*\)={{|\n\1={{|g' -e 's|\\\([^n]\)|\\\\\1|g' -e 's|/|\\/|g' -e 's|\&|\\&|g' | sed 's|\([$(ALLWD_VAR_CHRS)]*\)={{\(.*\)}}| s/$$$(strip $(subst .,,$(suffix $(patsubst %.info,%.category,$<)))){\\[\1\\]}/\2/|' >> $@.var.sub.tmp
 @sed -i -f $@.var.sub.tmp $@
 @sed -i -e 's|$$global{BASE_PATH}|$(B)|g' -e 's|$$global{ACTIVE_LANGUAGE}|$(LANG)|g' \
 	-e 's|$$global{ACTIVE_CATEGORY}|$(CATEGORY)|g' -e 's|$$category{WEIGHT}|0|g' \
