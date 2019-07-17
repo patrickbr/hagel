@@ -85,10 +85,10 @@ define curcat
 $(subst $(realpath $(CURDIR))/$(P)/,,$(realpath $(dir $@)))
 endef
 
-.PHONY:
+.PHONY: all
 all: $(CAT_HTML_FILES) $(CON_HTML_FILES) $(LANG_INDEX_FILES) html/index.html
 
-.PHONY:
+.PHONY: ! all!
 ! all!: clean all
 
 .SECONDEXPANSION:
@@ -189,11 +189,11 @@ $(LANG_INDEX_FILES) html/index.html:
 	@mkdir -p $(dir $@)
 	@cp $< $@
 
-.PHONY:
+.PHONY: rndr_strc
 rndr_strc:
 	@mkdir -p $(sort $(subst $(P)/, $(R)/, $(dir $(wildcard $(P)/*/*/))))
 
-.PHONY:
+.PHONY: clean
 clean:
 	@rm -rf render
 	@rm -rf html
