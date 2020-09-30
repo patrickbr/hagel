@@ -85,13 +85,14 @@ define curcat
 $(subst $(realpath $(CURDIR))/$(P)/,,$(realpath $(dir $@)))
 endef
 
-.PHONY: all
+.PHONY: all ! all! rndr_strc clean
+.SECONDEXPANSION:
+.SECONDARY:
+
 all: $(CAT_HTML_FILES) $(CON_HTML_FILES) $(LANG_INDEX_FILES) html/index.html
 
-.PHONY: ! all!
 ! all!: clean all
 
-.SECONDEXPANSION:
 $(R)/%.content.r: $(P)/%.content $(R)/lswitch.r $(T)/page.tmpl \
   $$(strip $$(subst $$(lastword $$(subst /, ,$$(dir $$@)))/, ,$$(dir $$@)))menu.r \
   $(T)/content.tmpl $$(wildcard $$(dir $$(P)/$$*)content.tmpl) $$(dir $$(R)/$$*)cmrows.r | rndr_strc
@@ -102,7 +103,6 @@ $(R)/%.content.r: $(P)/%.content $(R)/lswitch.r $(T)/page.tmpl \
 	$(menu-sub)
 	$(var-sub)
 
-.SECONDEXPANSION:
 $(R)/%.crow.r: $(P)/%.content $(T)/content_row.tmpl $$(wildcard $$(dir $$(P)/$$*)content_row.tmpl) \
   | rndr_strc
 	@echo "Building $@"
@@ -113,7 +113,6 @@ $(R)/%.crow.r: $(P)/%.content $(T)/content_row.tmpl $$(wildcard $$(dir $$(P)/$$*
 	@sed -i -e 's|$$content{URL}|$(B)$(patsubst $(P)/%.content,%$(CSUFF),$<)|g' $@
 	@tr '\n' ' ' < $@ > $@.tmp && printf '\n' >> $@.tmp && mv -f $@.tmp $@
 
-.SECONDEXPANSION:
 $(R)/%.cmrow.r: $(P)/%.content $(T)/content_menu_row.tmpl | rndr_strc
 	@echo "Building $@"
 	@cp $(T)/content_menu_row.tmpl $@
@@ -123,7 +122,6 @@ $(R)/%.cmrow.r: $(P)/%.content $(T)/content_menu_row.tmpl | rndr_strc
 	@sed -i -e 's|$$content{URL}|$(B)$(patsubst $(P)/%.content,%$(CSUFF),$<)|g' $@
 	@tr '\n' ' ' < $@ > $@.tmp && printf '\n' >> $@.tmp && mv -f $@.tmp $@
 
-.SECONDEXPANSION:
 $(R)/%/cmrows.r:$$(patsubst $$(P)/$$(PR).content,$$(R)/$$(PR).cmrow.r,\
   $$(wildcard $(P)/$$*/*.content)) | rndr_strc
 	@echo "Building $@"
@@ -134,7 +132,6 @@ $(R)/%/crows.r:$$(patsubst $$(P)/$$(PR).content,$$(R)/$$(PR).crow.r,\
 	@echo "Building $@"
 	@touch $@ && test -f '$<' && cat $^ | sort -Vk1,1 | sed 's/$$__cnt_w{[_a-zA-Z0-9-]\+}//g' >$@ ||:
 
-.SECONDEXPANSION:
 $(R)/%/category.r: $(P)/%/category.info $(R)/%/cmrows.r $(R)/%/crows.r $(R)/lswitch.r \
   $$(strip $$(subst $$(lastword $$(subst /, ,$$(dir $$@)))/, ,$$(dir $$@)))menu.r \
   $(T)/page.tmpl $(T)/category.tmpl $$(wildcard $(P)/%/category.tmpl) | rndr_strc
@@ -173,7 +170,6 @@ $(CON_HTML_FILES) $(CAT_HTML_FILES):
 	@mkdir -p $(dir $@)
 	@sed 's!$$\(content\|category\|global\){[A-Za-z0-9_-]*}!!g' $< > $@
 
-.SECONDEXPANSION:
 $(R)/%/menu.r: $$(patsubst $$(P)/$$(PR)/category.info,$$(R)/$$(PR)/mrow.r,\
   $$(wildcard $(P)/$$*/**/category.info)) | rndr_strc
 	@echo "Building $@"
@@ -189,11 +185,9 @@ $(LANG_INDEX_FILES) html/index.html:
 	@mkdir -p $(dir $@)
 	@cp $< $@
 
-.PHONY: rndr_strc
 rndr_strc:
 	@mkdir -p $(sort $(subst $(P)/, $(R)/, $(dir $(wildcard $(P)/*/*/))))
 
-.PHONY: clean
 clean:
 	@rm -rf render
 	@rm -rf html
