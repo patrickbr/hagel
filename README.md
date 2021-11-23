@@ -3,7 +3,7 @@
 hagel
 =====
 
-An static page generator that supports multiple languages, templating, two-level menus, content categories (_"content types"_) and direct rendering of system command outputs into content.
+A static page generator that supports multiple languages, templating, two-level menus, content categories (_"content types"_) and direct rendering of system command outputs into content.
 
 Implemented in a single ~200 LOC Makefile. Created during [a heavy hail storm in may 2015](https://www.youtube.com/watch?v=HDuHtCnxxj8), hence the name (hagel means hail in german). Mostly meant as a joke to make fun of heavy-weight web frameworks.
 
